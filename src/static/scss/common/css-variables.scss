@@ -1,0 +1,15 @@
+@import "./variables.scss";
+
+:root {
+  // Primary colours
+  --color-white: $white;
+  --color-black: $black;
+
+  // Typography
+  --text-color: $black;
+
+  // --font-size-small: #{$font-size-small};
+  // --font-size-base: #{$font-size-base};
+  // --font-size-large: #{$font-size-large};
+  --font-body: "TT Norms", Arial, sans-serif;
+}
