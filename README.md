@@ -1,56 +1,43 @@
-# Next boilerplate
+# Gesture controlled space invaders
 
-This is based on the Mirabeau Front-end boilerplate but now React based (using NextJS) and stacked with new functionalities.
+Use your hand to controll the spaceship and point your finger to shoot down the aliens
 
-What I (Tim) added
+(This is still a work in progress)
 
-- Husky for pre commit linting, checks CSS / JS
-- TypeScript (this is very opinionated but I think the best choice)
-- CSS Modules
-- Few added linting rules
-  - Added mandatory React/NextJS linting
-  - Added TypeScript linting
-  - Added A11Y linting
+## Read more in my blogpost
 
-TODO:
+I am currently writing a blogpost about this repository "What I learned from over-engineering the game space invaders" it will highlight some of the decisions made and whether it's a good idea or not.
 
-- [] Fix the no-js stuff in the carousel
-- [] Fix storybook absolute URLs in scss (right now it errors, works in nextjs though)
-- [] Add testing setup
+Note: this repository is mostly for experimental and research purpose. I would not recommend using any of this in production.
 
-## Easily start your next project
+## Technologies used
 
-Quickstart your application using the following command
+- **[React](https://reactjs.org/) / [NextJS](https://nextjs.org/)**
 
-`npx create-next-app your-project-name --example https://github.com/Timvdv/next-boilerplate`
+  A framework for React that enables server side rendering along with some other goodies, I’d highly recommend it
 
-## Getting Started
+- **[NextJS Boilerplate](https://github.com/Timvdv/next-boilerplate) (my own boilerplate to quickly get started with a NextJS project)**
 
-First, run the development server:
+  A boilerplate that I build around NextJS to incorporate prettier, all sorts of code linting, Huskey and storybook to preview each component
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+- **[Recoil](https://recoiljs.org/)**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+  I used recoil to manage the global state I prefer this over react context because they made a really nice api to query and edit state while still being performant. This is one of those libraries I would like to introduce in every project (pro tip: usually not the smartest idea)
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+- **[Reactronica](https://reactronica.com/)**
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+  I wanted to give the game some sounds and found this really cool library that lets you play around with sound like it’s a react component instead of using the audio api directly
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+- **[React Konva](https://github.com/konvajs/react-konva)**
 
-## Storybook
+  Since we need canvas, I discovered this library which can talk to the canvas like it’s a react component and is supposed to make my life easier
 
-How to use Storybook
+- [**React Spring**](https://react-spring.io/)
 
-## Learn More
+  A library used for complex animations, I can also really recommend this for whenever you need to do some special animations in react
 
-To learn more about Next.js, take a look at the following resources:
+- **[Handtrack.js](https://victordibia.com/handtrack.js/#/)**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  I thought it would be fun to add some fun interaction in the game so I used a handtracking library which acts as a controller for the game.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Check out the rest in the package.json
