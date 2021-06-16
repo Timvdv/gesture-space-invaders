@@ -82,7 +82,7 @@ module.exports = {
         max: 5,
       },
     ],
-    'consistent-return': 'error',
+    'consistent-return': 'off',
     'default-case': 'error',
     'dot-notation': 'error',
     eqeqeq: 'error',
@@ -107,7 +107,7 @@ module.exports = {
     'no-lone-blocks': 'error',
     'no-loop-func': 'error',
     'no-magic-numbers': [
-      'error',
+      'off',
       {
         ignore: [-1, 0, 1],
       },

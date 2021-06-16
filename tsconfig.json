@@ -20,7 +20,9 @@
     "**/*.ts",
     "**/*.tsx",
     "src/helpers/test/fileTransform.js",
-    "src/helpers/test/cssTransform.js"
+    "src/helpers/test/cssTransform.js",
+    "src/pages/index.jsx",
+    "src/helpers/hooks/useAllKeyPress.js"
   ],
   "exclude": ["node_modules"]
 }
