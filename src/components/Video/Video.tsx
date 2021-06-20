@@ -42,15 +42,18 @@ export default function Video() {
             y: game.canvasHeight - player.height,
             x: Math.ceil(element.bbox[0] * scale),
           })
+
+          first = 'open'
+
+          return
         }
 
         if (element.label === 'point' && first === 'open') {
-          first = 'point'
+          const test = bullets.filter((bullet) => bullet.x > -50)
 
-          bullets.filter((bullet) => bullet.x > -50)
-
+          // if (canShoot) {
           setBullets([
-            ...bullets,
+            ...test,
             {
               id: uuidv4(),
               x: Math.ceil(element.bbox[0] * scale),
@@ -60,11 +63,10 @@ export default function Video() {
               show: true,
             },
           ])
+          // }
 
-          return
+          first = 'point'
         }
-
-        first = 'open'
       })
 
       model.renderPredictions(

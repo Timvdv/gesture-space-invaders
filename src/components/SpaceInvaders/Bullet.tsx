@@ -28,10 +28,10 @@ const Bullet = ({ uuid }: BulletProps) => {
           }}
           onFrame={(animation) => {
             // This will trigger an INSANE amount of renders
-            setBullet({
-              ...bullet,
-              y: animation.y,
-            })
+            // setBullet({
+            //   ...bullet,
+            //   y: animation.y,
+            // })
           }}
         >
           {(props) => {

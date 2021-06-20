@@ -19,7 +19,7 @@ export default function Home() {
       </Head>
 
       <div className={styles.container}>
-        <Video />
+        {/* <Video /> */}
         <NoSSRGame />
       </div>
     </>
