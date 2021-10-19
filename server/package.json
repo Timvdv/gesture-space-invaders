@@ -1,0 +1,23 @@
+{
+  "name": "webcam-hand-detection-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1632432234",
+    "@mediapipe/hands": "^0.3.1632795355",
+    "@tensorflow-models/handpose": "^0.0.7",
+    "@tensorflow/tfjs": "^3.9.0",
+    "@tensorflow/tfjs-backend-wasm": "^3.9.0",
+    "@tensorflow/tfjs-backend-webgl": "^3.9.0",
+    "@tensorflow/tfjs-node": "^3.9.0",
+    "canvas": "^2.8.0",
+    "ffmpeg-static": "^4.4.0",
+    "node-webcam": "^0.8.0"
+  }
+}

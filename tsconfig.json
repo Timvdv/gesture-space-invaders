@@ -15,14 +15,6 @@
     "jsx": "preserve",
     "baseUrl": "src"
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "src/helpers/test/fileTransform.js",
-    "src/helpers/test/cssTransform.js",
-    "src/pages/index.jsx",
-    "src/helpers/hooks/useAllKeyPress.js"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/workers/example.worker.js"],
   "exclude": ["node_modules"]
 }

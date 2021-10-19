@@ -1,26 +1,38 @@
 import Konva from 'konva'
-import { useEffect, useRef, useState } from 'react'
-import { useRecoilState } from 'recoil'
-import { Spring, animated } from 'react-spring/renderprops-konva'
-import { Rect } from 'react-konva'
-import { playerState, gameState } from 'state/spaceInvaderState'
+import { useRef, useEffect } from 'react'
+import { Image } from 'react-konva'
+import { IPlayer } from 'state/spaceInvaderState'
+import useImage from 'use-image'
 
-const Player = () => {
+type PlayerProps = {
+  player: IPlayer
+}
+
+const Player = ({ player }: PlayerProps) => {
   const PlayerElement = useRef(null)
-  const [player] = useRecoilState(playerState)
+  const [image] = useImage(player.src)
 
+  useEffect(() => {
+    const anim = new Konva.Animation((frame) => {
+      PlayerElement?.current?.to({ x: window.player.x })
+    }, PlayerElement.current.getLayer())
+
+    anim.start()
+
+    return () => {
+      anim.stop()
+    }
+  }, [])
   return (
-    <>
-      <Rect
-        id={player.id}
-        ref={PlayerElement}
-        x={player.x}
-        y={player.y}
-        width={player.width}
-        height={player.height}
-        fill={'red'}
-      />
-    </>
+    <Image
+      image={image}
+      id={player.id}
+      ref={PlayerElement}
+      x={player.x}
+      y={player.y}
+      width={player.width}
+      height={player.height}
+    />
   )
 }
 

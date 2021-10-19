@@ -1,10 +1,12 @@
+/* eslint-disable complexity */
 import { useEffect, useRef } from 'react'
-import { useRecoilState } from 'recoil'
-import userState from 'state/userState'
+import { useRecoilValue, useRecoilState } from 'recoil'
 import { v4 as uuidv4 } from 'uuid'
+import * as handTrack from 'handtrackjs'
 
 import styles from './Video.module.scss'
-import { bulletState, playerState, gameState } from 'state/spaceInvaderState'
+import { playerState, gameState } from 'state/spaceInvaderState'
+import useWindowSize from 'helpers/hooks/useWindowSize'
 
 let model = null
 let isVideoPlaying = false
@@ -19,17 +21,17 @@ let userInfo = {
 }
 
 export default function Video() {
+  const size = useWindowSize()
   const video = useRef(null)
   const canvas = useRef(null)
 
-  const [, setUserState] = useRecoilState(userState)
-  const [bullets, setBullets] = useRecoilState(bulletState)
-  const [player, setPlayer] = useRecoilState(playerState)
-  const [game] = useRecoilState(gameState)
+  const { player } = window
+
+  const [game, setGame] = useRecoilState(gameState)
+
+  const scale = 700 / 500
 
   function runDetection() {
-    const scale = 700 / 500
-
     model.detect(video.current).then((predictions) => {
       predictions.forEach((element) => {
         if (element.label !== 'face') {
@@ -37,33 +39,28 @@ export default function Video() {
         }
 
         if (element.label === 'open') {
-          setPlayer({
-            ...player,
-            y: game.canvasHeight - player.height,
-            x: Math.ceil(element.bbox[0] * scale),
-          })
+          window.player.x = Math.ceil(element.bbox[0] * scale)
+          window.player.y = game.canvasHeight - player.height
 
           first = 'open'
 
           return
         }
 
-        if (element.label === 'point' && first === 'open') {
-          const test = bullets.filter((bullet) => bullet.x > -50)
+        if (element.label === 'point') {
+          window.player.x = Math.ceil(element.bbox[0] * scale)
+          window.player.y = game.canvasHeight - player.height
+        }
 
-          // if (canShoot) {
-          setBullets([
-            ...test,
-            {
-              id: uuidv4(),
-              x: Math.ceil(element.bbox[0] * scale),
-              y: game.canvasHeight - 50,
-              width: 50,
-              height: 50,
-              show: true,
-            },
-          ])
-          // }
+        if (element.label === 'point' && first === 'open') {
+          window.bullets.push({
+            id: uuidv4(),
+            x: Math.ceil(element.bbox[0] * scale),
+            y: game.canvasHeight - 50,
+            width: 10,
+            height: 30,
+            show: true,
+          })
 
           first = 'point'
         }
@@ -83,6 +80,7 @@ export default function Video() {
 
   const init = async () => {
     context = canvas.current.getContext('2d')
+
     model = await handTrack.load({
       canvas: canvas.current,
       context,
@@ -98,30 +96,108 @@ export default function Video() {
     if (videoResult.status) {
       console.log('Video started. Now tracking')
       isVideoPlaying = true
-      runDetection(model, context)
+
+      setGame({ ...game, state: 'playing' })
+
+      runDetection()
     } else {
+      setGame({
+        ...game,
+        state: 'notSupported',
+      })
+
       console.log('Please enable video')
     }
   }
 
+  const workerRef = useRef(null)
+
+  const render = function () {
+    const ctx = canvas.current.getContext('2d')
+
+    ctx.drawImage(
+      video.current,
+      0,
+      0,
+      video.current.width,
+      video.current.height
+    )
+
+    const srcData = ctx.getImageData(
+      0,
+      0,
+      video.current.width,
+      video.current.height
+    )
+
+    workerRef.current.postMessage({
+      imageData: srcData,
+    })
+  }
+
   useEffect(() => {
-    init()
+    setGame({
+      ...game,
+      state: 'loading',
+    })
 
-    // Update the user state every second so the music is in sync
-    const interval = setInterval(() => {
-      setUserState(userInfo)
-    }, 1000)
-    return () => clearInterval(interval)
+    /* Setup video stream and canvas */
+    navigator.getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia
 
-    /* start camera input stream on the provided video tag. returns a promise with message format
-    { status: false, msg: 'please provide a valid video element' }
-    */
+    navigator.getUserMedia(
+      { video: true },
+      function (stream) {
+
+        if(video.current) {
+
+          video.current.srcObject = stream
+          video.current.play()
+
+
+          setInterval(render, 10)
+        }
+
+      },
+      function (error) {
+        console.log('error', error)
+      }
+    )
+
+    workerRef.current = new Worker(
+      new URL('../../workers/example.worker.js', import.meta.url)
+    )
+
+    workerRef.current.onmessage = (evt) =>
+      console.log('worker response', evt.data)
+
+    return () => {
+      workerRef.current.terminate()
+    }
   }, [])
 
+  // Only run this client side
   return (
     <>
-      <canvas className={styles.video__canvas} ref={canvas}></canvas>
-      <video className={styles.video__mini} ref={video} muted></video>
+      <canvas
+        className={styles.video__canvas}
+        ref={canvas}
+        width={128}
+        height={72}
+        style={{
+          left: `${(player?.x / 100) * (size.width / 100) + 2}%`,
+        }}
+      ></canvas>
+      <video
+        className={styles.video__mini}
+        ref={video}
+        width={128}
+        height={72}
+        muted
+      ></video>
     </>
   )
 }

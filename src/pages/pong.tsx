@@ -2,7 +2,7 @@ import Head from 'next/head'
 import styles from 'static/scss/pages/Home.module.scss'
 import dynamic from 'next/dynamic'
 
-const NoSSRGame = dynamic(() => import('components/SpaceInvaders/Game'), {
+const NoSSRGame = dynamic(() => import('components/Pong/Game'), {
   ssr: false,
 })
 
@@ -22,10 +22,7 @@ export default function Home() {
       </Head>
 
       <div className={styles.container}>
-
-        {/* Put it in a webworker? */}
         {/* <NoSSRVideo /> */}
-
         <NoSSRGame />
       </div>
     </>

@@ -1,34 +1,36 @@
-import { useEffect, useRef } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { useEffect, useRef, useState } from 'react'
+import Konva from 'konva'
 import {
   useRecoilState,
   useRecoilBridgeAcrossReactRoots_UNSTABLE,
 } from 'recoil'
 import { Stage, Layer } from 'react-konva'
 import useAllKeysPress from 'helpers/hooks/useAllKeyPress'
-import { v4 as uuidv4 } from 'uuid'
-import {
-  gameState,
-  bulletState,
-  invaderState,
-  playerState,
-} from 'state/spaceInvaderState'
-import userState from 'state/userState'
+import { useIntersection } from 'helpers/hooks/useIntersection'
+import { gameState, playerState } from 'state/spaceInvaderState'
 import Invader from './Invader'
 import Player from './Player'
-import Bullet from './Bullet'
-import haveIntersection from 'helpers/intersect'
+import Bullets from './Bullets'
+
+window.bullets = []
+window.invaders = []
+
+window.player = {
+  show: true,
+  id: 'player1',
+  width: 100,
+  height: 100,
+  x: 0,
+  y: 0,
+  src:
+    'https://p165.p3.n0.cdn.getcloudapp.com/items/Wnux6QD9/a008da85-f7cd-442d-8b61-d7ff98d1c1ee.png',
+}
 
 function Game() {
-  const [game] = useRecoilState(gameState)
-  const [bullets, setBullets] = useRecoilState(bulletState)
-  const [invaders, setInvaders] = useRecoilState(invaderState)
-  const [player, setPlayer] = useRecoilState(playerState)
-  const [user] = useRecoilState(userState)
-
-  console.log(user)
-
+  const [game, setGame] = useRecoilState(gameState)
+  const { player } = window
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE()
-
   const layer = useRef(null)
 
   // now you may want to make it visible even on small screens
@@ -43,53 +45,47 @@ function Game() {
   const useKeyPressRight = useAllKeysPress({ userKeys: 'ArrowRight' })
 
   useEffect(() => {
-    setPlayer({
-      ...player,
-      x: player.x - 10,
-    })
+    player.x -= 5
   }, [useKeyPressLeft])
 
   useEffect(() => {
-    setPlayer({
-      ...player,
-      x: player.x + 10,
-    })
+    player.x += 5
   }, [useKeyPressRight])
 
   useEffect(() => {
     if (useKeyPressUp) {
-      bullets.filter((bullet) => bullet.x > -50)
+      if (window.bullets.length > 1) {
+        window.bullets.shift()
+      }
 
-      setBullets([
-        ...bullets,
-        {
-          id: uuidv4(),
-          x: player.x,
-          y: game.canvasHeight - 50,
-          width: 50,
-          height: 50,
-          show: true,
-        },
-      ])
+      window.bullets.push({
+        id: uuidv4(),
+        x: player.x,
+        y: player.y - 50,
+        width: 10,
+        height: 30,
+        show: true,
+      })
     }
   }, [useKeyPressUp])
 
   useEffect(() => {
-    let xStart = 0,
-      yStart = 0
+    const padding = 10
+    let xStart = padding,
+      yStart = 20
 
     const maxWidth = game.canvasWidth
 
-    // Lets start with 10 invaders
-    ;[...Array(10)].forEach(() => {
-      const invaderWidth = game.canvasWidth / 7
+    // Start with some invaders
+    ;[...Array(24)].forEach(() => {
+      const invaderWidth = game.canvasWidth / 8
 
       if (maxWidth < xStart) {
-        xStart = 0
-        yStart += invaderWidth
+        xStart = padding
+        yStart += invaderWidth + padding
       }
 
-      invaders.push({
+      window.invaders.push({
         id: uuidv4(),
         width: invaderWidth,
         height: invaderWidth,
@@ -98,60 +94,53 @@ function Game() {
         show: true,
       })
 
-      xStart += invaderWidth
-    })
-
-    setPlayer({
-      id: 'player1',
-      width: 100,
-      height: 100,
-      x: game.canvasWidth / 2 - 100 / 2,
-      y: game.canvasHeight - player.height,
+      xStart += invaderWidth + padding
     })
   }, [])
 
-  console.log('Render')
+  // Remove both the bullet & invader when intersecting
+  useIntersection((newBulletIndex, newInvaderIndex) => {
+    window.bullets.splice(newBulletIndex - 1, 1)
+    window.invaders.splice(newInvaderIndex, 1)
 
-  useEffect(() => {
-    layer.current &&
-      bullets.forEach((bullet) => {
-        layer.current.children.forEach((group) => {
-          // do not check intersection with itself
-          if (group.attrs.id === bullet.id || group.attrs.id === 'player1') {
-            return
-          }
+    setGame({
+      ...game,
+      intersectCount: game.intersectCount + 1,
+      state: 'playing',
+    })
+  })
 
-          if (haveIntersection(group.getClientRect(), bullet)) {
-            const newBulletIndex = bullets.findIndex(
-              (bulletIndex) => bulletIndex.id === bullet.id
-            )
+  if (game.state === 'loading') {
+    return (
+      <>
+        <h1>Loading game...</h1>
+      </>
+    )
+  }
 
-            if (newBulletIndex > -1) {
-              const newState = [...bullets]
+  if (game.state === 'notSupported') {
+    return (
+      <>
+        <h1>Please enable your video</h1>
+      </>
+    )
+  }
 
-              console.log(bullet)
-              console.log('INTERSECTING -', bullet, group)
+  if (game.state === 'win') {
+    return (
+      <>
+        <h1>You won!</h1>
+      </>
+    )
+  }
 
-              newState.splice(newBulletIndex - 1, 1)
-
-              setBullets(newState)
-            }
-
-            const newInvaderIndex = invaders.findIndex(
-              (invaderIndex) => invaderIndex.id === group.attrs.id
-            )
-
-            if (newInvaderIndex > -1) {
-              const newState = [...invaders]
-
-              newState.splice(newInvaderIndex, 1)
-
-              setInvaders(newState)
-            }
-          }
-        })
-      })
-  }, [bullets])
+  if (game.state === 'lose') {
+    return (
+      <>
+        <h1>You Lose!</h1>
+      </>
+    )
+  }
 
   // Build the Game
   return (
@@ -160,14 +149,17 @@ function Game() {
       height={window.innerHeight}
       scaleX={scale}
       scaleY={scale}
+      style={{
+        zIndex: 2,
+      }}
     >
       <Layer ref={layer}>
         <RecoilBridge>
-          {bullets.map((bullet) => {
-            return <Bullet key={bullet.id} uuid={bullet.id} />
+          {window.bullets.map((bullet) => {
+            return <Bullets key={bullet.id} uuid={bullet.id} />
           })}
 
-          {invaders.map((invader) => {
+          {window.invaders.map((invader) => {
             return (
               <Invader
                 key={invader.id}
@@ -180,7 +172,7 @@ function Game() {
             )
           })}
 
-          <Player />
+          <Player player={player} />
         </RecoilBridge>
       </Layer>
     </Stage>

@@ -1,7 +1,7 @@
 import Konva from 'konva'
-import { useEffect, useRef, useState } from 'react'
-import { Rect } from 'react-konva'
-import { getRandom } from 'helpers/getRandom'
+import { useEffect, useRef } from 'react'
+import { Image } from 'react-konva'
+import useImage from 'use-image'
 
 type InvaderProps = {
   uuid: string
@@ -13,6 +13,9 @@ type InvaderProps = {
 
 const Invader = ({ uuid, x, y, width, height }: InvaderProps) => {
   const invaderRef = useRef(null)
+  const [image] = useImage(
+    'https://i0.wp.com/codeheir.com/wp-content/uploads/2019/03/invader1.png'
+  )
 
   useEffect(() => {
     const anim = new Konva.Animation((frame) => {
@@ -26,18 +29,15 @@ const Invader = ({ uuid, x, y, width, height }: InvaderProps) => {
     }
   }, [])
 
-  const color = Konva.Util.getRandomColor()
-
   return (
-    <Rect
+    <Image
+      image={image}
       id={uuid}
       ref={invaderRef}
       x={x}
       y={y}
       width={width}
       height={height}
-      //
-      fill={'black'}
       globalCompositeOperation="xor"
     />
   )

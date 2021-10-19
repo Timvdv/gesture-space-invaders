@@ -46,3 +46,7 @@ yarn-error.log*
 .DS_Store
 *.pem
 Thumbs.db
+
+# python packages
+/server/node_modules/
+.bin/
