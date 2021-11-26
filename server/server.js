@@ -1,3 +1,5 @@
+/** NOT USED ANYMORE - SWITCHED TO PYTHON - HERE FOR FUTURE REFERENCE */
+
 const tf = require('@tensorflow/tfjs-node')
 const handpose = require('@tensorflow-models/handpose')
 const { spawn } = require('child_process');

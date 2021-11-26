@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Konva from 'konva'
-import { Stage, Layer, Rect, Circle } from 'react-konva'
+import { Stage, Layer, Rect, Circle, Text } from 'react-konva'
 import useAllKeysPress from 'helpers/hooks/useAllKeyPress'
 
 import SocketIOClient from 'socket.io-client'
@@ -27,6 +27,20 @@ function collisionDetect(player, ball) {
   )
 }
 
+function getRandomAngle() {
+  const maxAngleDegrees = 180
+  const minAngleDegrees = 0
+
+  return (
+    ((Math.random() * (maxAngleDegrees - minAngleDegrees) + minAngleDegrees) /
+      180) *
+    Math.PI
+  )
+}
+
+let playerOneScore = 0,
+  playerTwoScore = 0
+
 function Game() {
   const layer = useRef(null)
 
@@ -41,19 +55,19 @@ function Game() {
   const useKeyPressD = useAllKeysPress({ userKeys: 'd' })
 
   const [playerOne, setPlayerOne] = useState({
-    x: 40,
-    y: 10,
-    width: 100,
-    height: 20,
+    x: 10,
+    y: 40,
+    width: 200,
+    height: 30,
     leftArrowPressed: false,
     rightArrowPressed: false,
   })
 
   const [playerTwo, setPlayerTwo] = useState({
     x: 10,
-    y: gameSize - 30,
-    width: 100,
-    height: 20,
+    y: gameSize - 70,
+    width: 200,
+    height: 30,
     leftArrowPressed: false,
     rightArrowPressed: false,
   })
@@ -64,7 +78,8 @@ function Game() {
     velocityX: 1,
     velocityY: 1,
     radius: 30,
-    speed: 7,
+    speed: 2,
+    angle: 0,
   })
 
   useEffect(() => {
@@ -104,49 +119,54 @@ function Game() {
       ...ball,
       x: gameSize / 2,
       y: gameSize / 2,
-      velocityX: -ball.velocityX,
-      velocityY: -ball.velocityY,
-      speed: 7,
+      velocityX: 1,
+      velocityY: 1,
+      speed: 2,
+      angle: getRandomAngle(),
     })
   }
 
   useEffect(() => {
     const anim = new Konva.Animation((frame) => {
-      // if (playerOne.leftArrowPressed && playerOne.x > 0) {
-      //   setPlayerOne({
-      //     ...playerOne,
-      //     x: playerOne.x - 8,
-      //   })
-      // } else if (
-      //   playerOne.rightArrowPressed &&
-      //   playerOne.x < gameSize - playerOne.width
-      // ) {
-      //   setPlayerOne({
-      //     ...playerOne,
-      //     x: playerOne.x + 8,
-      //   })
-      // }
+      /**
+       * Uncomment below if you want to enable move using the keyboard
+       */
 
-      // if (playerTwo.leftArrowPressed && playerTwo.x > 0) {
-      //   setPlayerTwo({
-      //     ...playerTwo,
-      //     x: playerTwo.x - 8,
-      //   })
-      // } else if (
-      //   playerTwo.rightArrowPressed &&
-      //   playerTwo.x < gameSize - playerTwo.width
-      // ) {
-      //   setPlayerTwo({
-      //     ...playerTwo,
-      //     x: playerTwo.x + 8,
-      //   })
-      // }
+      //   if (playerOne.leftArrowPressed && playerOne.x > 0) {
+      //     setPlayerOne({
+      //       ...playerOne,
+      //       x: playerOne.x - 8,
+      //     })
+      //   } else if (
+      //     playerOne.rightArrowPressed &&
+      //     playerOne.x < gameSize - playerOne.width
+      //   ) {
+      //     setPlayerOne({
+      //       ...playerOne,
+      //       x: playerOne.x + 8,
+      //     })
+      //   }
+
+      //   if (playerTwo.leftArrowPressed && playerTwo.x > 0) {
+      //     setPlayerTwo({
+      //       ...playerTwo,
+      //       x: playerTwo.x - 8,
+      //     })
+      //   } else if (
+      //     playerTwo.rightArrowPressed &&
+      //     playerTwo.x < gameSize - playerTwo.width
+      //   ) {
+      //     setPlayerTwo({
+      //       ...playerTwo,
+      //       x: playerTwo.x + 8,
+      //     })
+      //   }
 
       // move the ball
       ball.x += ball.velocityX
       ball.y += ball.velocityY
 
-      if (ball.x + ball.radius >= gameSize || ball.x - ball.radius <= 0) {
+      if (ball.x + ball.radius + 10 >= gameSize || ball.x - ball.radius <= 10) {
         // play wallHitSound
 
         ball.velocityX = -ball.velocityX
@@ -159,8 +179,8 @@ function Game() {
         // play scoreSound
 
         // then user scored 1 point
-        // user.score += 1
-        // console.log('USER SCORE  +1')
+        playerOneScore += 1
+
         reset()
 
         return
@@ -171,8 +191,8 @@ function Game() {
         // play scoreSound
 
         // then ai scored 1 point
-        // ai.score += 1
-        // console.log('USER2 SCORE  +1')
+        playerTwoScore += 1
+
         reset()
         return
       }
@@ -188,22 +208,29 @@ function Game() {
         // default angle is 0deg in Radian
         let angle = 0
 
-        // if ball hit the top of paddle
-        if (ball.x < player.x + player.width / 2) {
-          // then -1 * Math.PI / 4 = -45deg
-          angle = (-1 * Math.PI) / 4
-        } else if (ball.x > player.x + player.width / 2) {
-          // if it hit the bottom of paddle
-          // then angle will be Math.PI / 4 = 45deg
-          angle = Math.PI / 4
-        }
+        const relativeIntersectX = player.x + player.width / 2 - ball.x
+        const normalizedRelativeIntersectionY =
+          relativeIntersectX / (player.height / 2)
+        const bounceAngle = normalizedRelativeIntersectionY * -2
+
+        // // if ball hit the top of paddle
+        // if (ball.x + ball.radius / 2 < player.x + player.width / 2) {
+        //   // then -1 * Math.PI / 4 = -45deg
+        //   angle = (-1 * Math.PI) / 6
+        // } else if (ball.x + ball.radius / 2 > player.x + player.width / 2) {
+        //   // if it hit the bottom of paddle
+        //   // then angle will be Math.PI / 4 = 45deg
+        //   angle = Math.PI / 6
+        // }
 
         setBall({
           ...ball,
-          speed: ball.speed + 0.2,
+          speed: ball.speed + 0.3,
           velocityX:
-            (player === playerOne ? 1 : -1) * ball.speed * Math.cos(angle),
-          velocityY: ball.speed * Math.sin(angle),
+            (player === playerOne ? 1 : -1) *
+            ball.speed *
+            Math.cos(bounceAngle),
+          velocityY: ball.speed * Math.sin(bounceAngle),
         })
       }
 
@@ -217,24 +244,6 @@ function Game() {
     }
   })
 
-  const workerRef = useRef(null)
-
-  // useEffect(() => {
-  //   workerRef.current = new Worker(
-  //     new URL('../../workers/example.worker.js', import.meta.url)
-  //   )
-  //   workerRef.current.onmessage = (evt) =>
-  //     console.log('worker response', evt.data)
-
-  //   return () => {
-  //     workerRef.current.terminate()
-  //   }
-  // }, [])
-
-  // const handleWork = useCallback(async () => {
-  //   workerRef?.current?.postMessage(100000)
-  // }, [])
-
   useEffect((): any => {
     // connect to socket server
     const socket = SocketIOClient.connect('ws://0.0.0.0:8080', {
@@ -244,24 +253,21 @@ function Game() {
 
     // log socket connection
     socket.on('connect', () => {
-      console.log('SOCKET CONNECTED!', socket.id)
       setConnected(true)
     })
 
-    // update chat on new message dispatched
-    socket.on('message', (message) => {
-      console.log(message)
-    })
-
-    // update chat on new message dispatched
     socket.on('player1', (message) => {
-      console.log(message)
-
-      console.log(JSON.parse(message).left * 1000);
-
       setPlayerOne({
         ...playerOne,
-        x: JSON.parse(message).left * 1000,
+        x: (JSON.parse(message).left * 1000 + playerOne.width / 2),
+      })
+    })
+
+    socket.on('player2', (message) => {
+
+      setPlayerTwo({
+        ...playerTwo,
+        x: JSON.parse(message).left * 1000 - playerTwo.width / 2,
       })
     })
 
@@ -276,9 +282,18 @@ function Game() {
       height={gameSize}
       style={{
         zIndex: 2,
+        background: 'transparent',
       }}
+      fill="transparent"
     >
       <Layer ref={layer}>
+        <Text text={`Tim's score: ${playerOneScore}`} fill="white" y={10} />
+        <Text
+          text={`Opponent score: ${playerTwoScore}`}
+          fill="white"
+          y={gameSize - 20}
+          x={gameSize - 140}
+        />
         <Rect
           x={playerOne.x}
           y={playerOne.y}

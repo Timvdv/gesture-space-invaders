@@ -2,11 +2,11 @@ import Head from 'next/head'
 import styles from 'static/scss/pages/Home.module.scss'
 import dynamic from 'next/dynamic'
 
-const NoSSRGame = dynamic(() => import('components/Pong/Game'), {
+const NoSSRGame = dynamic(() => import('components/SpaceInvaders/Game'), {
   ssr: false,
 })
 
-const NoSSRVideo = dynamic(() => import('components/Video/VideoOnly'), {
+const NoSSRVideo = dynamic(() => import('components/Video/Video'), {
   ssr: false,
 })
 

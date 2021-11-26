@@ -185,7 +185,7 @@ export default function Video() {
       <canvas
         className={styles.video__canvas}
         ref={canvas}
-        width={128}
+        width={100}
         height={72}
         style={{
           left: `${(player?.x / 100) * (size.width / 100) + 2}%`,

@@ -7,7 +7,6 @@ from PIL import Image
 from aiohttp import web
 import socketio
 from threading import Lock
-import asyncio
 
 import nest_asyncio
 nest_asyncio.apply()
@@ -18,7 +17,8 @@ mp_hands = mp.solutions.hands
 
 async_mode = None
 
-bounding_box = {'top': 100, 'left': 0, 'width': 400, 'height': 300}
+bounding_box = {'top': 217, 'left': 10, 'width': 411, 'height': 311}
+bounding_box2 = {'top': 640, 'left': 10, 'width': 411, 'height': 311}
 
 sct = mss()
 
@@ -33,51 +33,85 @@ thread_lock = Lock()
 async def runHandDetection():
     with mp_hands.Hands(
         min_detection_confidence=0.5,
-        min_tracking_confidence=0.5) as hands:
+        min_tracking_confidence=0.5,
+        max_num_hands=1) as hands:
         while True:
-            sct_img = sct.grab(bounding_box)
+            sct_img_player1 = sct.grab(bounding_box)
+            sct_img_player2 = sct.grab(bounding_box2)
 
 
             if (cv2.waitKey(1) & 0xFF) == ord('q'):
                 cv2.destroyAllWindows()
                 break
 
-            image = np.array(sct_img)
+            image_player1 = np.array(sct_img_player1)
+            image_player2 = np.array(sct_img_player2)
 
             # To improve performance, optionally mark the image as not writeable to
             # pass by reference.
-            image.flags.writeable = False
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            results = hands.process(image)
+            image_player1.flags.writeable = False
+            image_player1 = cv2.cvtColor(image_player1, cv2.COLOR_BGR2RGB)
+            results = hands.process(image_player1)
+
+
+            # To improve performance, optionally mark the image as not writeable to
+            # pass by reference.
+            image_player2.flags.writeable = False
+            image_player2 = cv2.cvtColor(image_player2, cv2.COLOR_BGR2RGB)
+            results2 = hands.process(image_player2)
 
             # Draw the hand annotations on the image.
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
+            image_player1.flags.writeable = True
+            image_player1 = cv2.cvtColor(image_player1, cv2.COLOR_RGB2BGR)
+
+            # Draw the hand annotations on the image.
+            image_player2.flags.writeable = True
+            image_player2 = cv2.cvtColor(image_player1, cv2.COLOR_RGB2BGR)
+
+            if results2.multi_hand_landmarks:
+                for hand_landmarks in results2.multi_hand_landmarks:
                     mp_drawing.draw_landmarks(
-                        image,
+                        image_player2,
                         hand_landmarks,
                         mp_hands.HAND_CONNECTIONS,
                         mp_drawing_styles.get_default_hand_landmarks_style(),
                         mp_drawing_styles.get_default_hand_connections_style())
 
                     # Flip the image horizontally for a selfie-view display.
-                    cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+                    # cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
 
                     print(
-                        f'Wrist coordinates: (',
+                        f'Wrist coordinates (player2): (',
+                        f'{hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x}, '
+                        f'{hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y})')
+
+                    await sio.emit('player2', '{"left": ' + f'{hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x}' + ' }')
+
+
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    mp_drawing.draw_landmarks(
+                        image_player1,
+                        hand_landmarks,
+                        mp_hands.HAND_CONNECTIONS,
+                        mp_drawing_styles.get_default_hand_landmarks_style(),
+                        mp_drawing_styles.get_default_hand_connections_style())
+
+                    # Flip the image horizontally for a selfie-view display.
+                    # cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+
+                    print(
+                        f'Wrist coordinates (player1): (',
                         f'{hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x}, '
                         f'{hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y})')
 
                     await sio.emit('player1', '{"left": ' + f'{hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x}' + ' }')
 
-                if cv2.waitKey(5) & 0xFF == 27:
-                    thread_lock.release()
-                    # close connection
-                    sio.disconnect()
-                    break
-
+            if cv2.waitKey(5) & 0xFF == 27:
+                thread_lock.release()
+                # close connection
+                sio.disconnect()
+                break
 
 async def index(request):
     """Serve the client-side application."""

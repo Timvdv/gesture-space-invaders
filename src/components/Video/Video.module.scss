@@ -18,4 +18,12 @@
     left: 160px;
     display: none;
   }
+
+  &__big {
+    position: absolute;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
 }
